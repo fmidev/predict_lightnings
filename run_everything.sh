@@ -16,7 +16,7 @@ export ftp_proxy=http://wwwproxy.fmi.fi:8080
 
 
 # Github directory
-codir='/home/users/kamarain/lightnings/'
+codir='/home/users/kamarain/predict_lightnings/'
 
 # Data input directory
 indir='/ibrix/arch/climate/kamarain/ERAInterim/global/'
@@ -35,7 +35,7 @@ declare -a vars=('t850' 'pmsl' 'rh700' 'cape')
 for var in "${vars[@]}"
 do
    echo $var
-   #python download_eraint_from_ecmwf.py $var $codir $indir $oudir &
+   python download_eraint_from_ecmwf.py $var $codir $indir $oudir &
 done
 wait
 
@@ -46,7 +46,7 @@ wait
 
 # Process data and run modeling experiments --- bgn
 
-#python preprocess_raw_data.py $codir $indir $oudir &
+python preprocess_raw_data.py $codir $indir $oudir &
 wait
 
 python fit_models_sequent.py $codir $indir $oudir &
