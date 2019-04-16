@@ -1,4 +1,4 @@
-# Experiments on the statistical predictability of lightning count in Finland
+# Experiments on the statistical predictability of the lightning count in Finland
 Statistical learning methods are used to predict the daily lightning count based on large scale predictors. ERA-Interim reanalysis data over the Scandinavian region were dowloaded for the key predictor parameters, namely T850, CAPE, R700 and MSLP. Each predictor parameter were decomposed into principal components, which were further modified, and then used as potential predictors in a random sampling based Poisson regression modeling system.
 
 ## Dependencies
