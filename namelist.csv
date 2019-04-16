@@ -1,0 +1,10 @@
+"Key","Value"
+"yr_first",1998
+"yr_last",2018
+"n_pcs",15
+"n_estim",300
+"p_feat",0.5
+"p_smpl",0.75
+"lags","(0,1,2,3,4,5)"
+"params","('PMSL', 'T850', 'R700', 'CAPE',)"
+"estimator","poisson"
