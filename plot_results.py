@@ -62,7 +62,7 @@ results[numeric_columns] = results[numeric_columns].apply(pd.to_numeric)
 # Find optimal N of PCs
 opt_n_pcs = results.groupby('N of PCs')['Validation CORR'].median().idxmax()
 opt_idx = results['N of PCs'] == opt_n_pcs; opt_results = results[opt_idx]
-
+print('Optimal number of PCs is',opt_n_pcs)
 
 
 months = data.index.month.unique()

@@ -55,13 +55,18 @@ import seaborn as sns
 from statsmodels.regression.quantile_regression import QuantReg
 from statsmodels.discrete.discrete_model import NegativeBinomial
 
-model = sm.GLM(Y, X, family=sm.families.Poisson()).fit()
-model = sm.GLM(Y, X, family=sm.families.NegativeBinomial(alpha=.01)).fit()
-model = sm.GLM(Y, X, family=sm.families.Tweedie()).fit()
-model = NegativeBinomial(Y, X[variable_sample_reduced]).fit_regularized()
+model = sm.GLM(Y, X, family=sm.families.Poisson(link=sm.genmod.families.links.log())).fit()
+#model = sm.GLM(Y, X, family=sm.families.NegativeBinomial()).fit_regularized(method='elastic_net')
+model = sm.GLM(Y, X, family=sm.families.NegativeBinomial(alpha=1e-03)).fit()
+#model = sm.GLM(Y, X, family=sm.families.Tweedie()).fit()
+#model = NegativeBinomial(Y, X).fit(method='minimize',maxiter=200)
+
+
+
 print(model.summary())
 
-df = pd.merge(Y.rename('Obs').to_frame(), pd.DataFrame(model.predict(X), columns=['Mod']), left_on='Date', right_on='Date')
+#mod = model.predict(X); mod.loc[mod>60000]=0
+df = pd.merge(Y.rename('Obs').to_frame(), pd.DataFrame(mod, columns=['Mod']), left_on='Date', right_on='Date')
 g = sns.jointplot('Obs', 'Mod', data=df, kind="reg",color="m", height=7, ratio=2, )
 
 plt.tight_layout(); plt.show()
@@ -76,8 +81,11 @@ plt.tight_layout(); plt.show()
 
 
 # Potential base-estimators
-estimators = {  'poisson':sm.families.Poisson(),
-                'tweedie':sm.families.Tweedie()}
+estimators =    {  
+                'poisson':sm.families.Poisson(),
+                'tweedie':sm.families.Tweedie(),
+                'negbinm':sm.families.NegativeBinomial(alpha=5e-04),
+                }
 
 # Initialize output data container
 columns = ['N of PCs', 
@@ -109,7 +117,7 @@ variable_sample = np.array([])
 np.random.seed(5)
 for pc in range(1,n_pcs+1):
     
-    # Correct variables to be included only!
+    # A subset of variables to be included only!
     for i,vr in enumerate(X.keys()):
         
         param_name, cpn, lag = vr.rsplit('-')
@@ -125,6 +133,8 @@ for pc in range(1,n_pcs+1):
     variable_sample = np.unique(variable_sample)
     
     n_feat = int(len(variable_sample)*p_feat)
+    #n_feat = int(np.sqrt(len(variable_sample))) 
+    
     ss  = ShuffleSplit(n_splits=n_estim, train_size=p_smpl, random_state=99)
     
     mdls = pd.DataFrame(columns=columns)
@@ -135,6 +145,7 @@ for pc in range(1,n_pcs+1):
         
         variable_sample_reduced = resample(variable_sample, replace=False, n_samples=n_feat)
         print(variable_sample_reduced) 
+        #print((variable_sample_reduced.shape[0]/variable_sample.shape[0])*100., variable_sample.shape, variable_sample_reduced.shape)
         
         try:
             fitted_model = sm.GLM(Y_trn, X_trn[variable_sample_reduced], family=estimators[estim]).fit()
@@ -144,6 +155,9 @@ for pc in range(1,n_pcs+1):
             vldt_corr  = fcts.calc_corr(fitted_model.predict(X_vld[variable_sample_reduced]), Y_vld)
             test_rmse  = fcts.calc_rmse(fitted_model.predict(X_tst[variable_sample_reduced]), Y_tst)
             test_corr  = fcts.calc_corr(fitted_model.predict(X_tst[variable_sample_reduced]), Y_tst)
+            
+            # Discard too large models to save space, save only their validation results
+            if(pc >= 8): fitted_model = []
             
             df = pd.DataFrame(np.array([[int(pc), train_rmse, vldt_rmse, test_rmse,
                                                     train_corr, vldt_corr, test_corr, fitted_model, 
